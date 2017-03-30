@@ -5,4 +5,5 @@ body {
 canvas {
   margin: 0 auto;
   border: 5px solid white;
+  background: black;
 }
