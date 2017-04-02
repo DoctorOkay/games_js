@@ -24,7 +24,7 @@ var paddleSpeed = 0;
 var blockPadding = 5;
 var blocksInRow = 5;
 var blockRows = 10;
-var blockWidth = (SCREEN_WIDTH / blocksInRow);
+var blockWidth = (SCREEN_WIDTH / blocksInRow) - blockPadding;
 var blockHeight = blockWidth / 8;
 var blocks = [];
 
@@ -45,6 +45,7 @@ window.addEventListener("load", function(e) {
     lives = 3;
     reset();
   });
+
   window.addEventListener("keydown", function(e) {
     switch(e.code) {
       case "KeyA":
@@ -57,53 +58,68 @@ window.addEventListener("load", function(e) {
         break;
     }
   });
+
   window.addEventListener("keyup", function(e) {
     paddleSpeed = 0;
   });
+
   window.setInterval(function() {
-    // check potential collision
-    if (ballPositionX + ballSpeedX >= SCREEN_WIDTH || ballPositionX + ballSpeedX <= 0) {
-      ballSpeedX *= -1
-    }
-    if (ballPositionY + ballSpeedY <= 0) {
-      ballSpeedY *= -1
-    }
-    if (ballPositionY + ballSpeedY >= paddlePositionY) {
-      // is ball touching paddle?
-      if (ballPositionX + ballSpeedX > paddlePositionX && ballPositionX + ballSpeedX < paddlePositionX + paddleWitdh) {
-        ballSpeedY *= -1
-      }
-    }
-    if (ballPositionY + ballSpeedY > SCREEN_HEIGHT) {
-      // lives -= 1;
-      // reset();
-      ballSpeedY *= -1
-    }
-    if (paddlePositionX + paddleWitdh + paddleSpeed >= SCREEN_WIDTH || paddlePositionX + paddleSpeed <= 0) {
-      paddleSpeed = 0;
-    }
-    // move the paddle
-    paddlePositionX += paddleSpeed;
-    // move the ball
-    ballPositionX += ballSpeedX;
-    ballPositionY += ballSpeedY;
-    // clear the screen
-    drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "black", ctx);
-    // draw some blocks
-    for (var i = 0; i < blockRows; i++) {
-      for (var j = 0; j < blocksInRow; j++) {
-        var blockPositionX = j * (blockWidth + blockPadding) + blockPadding;
-        var blockPositionY = i * (blockHeight + blockPadding) + blockPadding;
-        drawRect(blockPositionX, blockPositionY, blockWidth, blockHeight, "white", ctx);
-      }
-    }
-    // draw the paddle
-    drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, "white", ctx);
-    // draw the ball
-    drawCircle(ballPositionX, ballPositionY, ballRadius, "white", ctx);
+    detectCollision();
+    updatePosition();
+    drawScreen();
   }, 1000 / FPS);
 
 });
+
+function detectCollision() {
+  if (ballPositionX + ballSpeedX >= SCREEN_WIDTH || ballPositionX + ballSpeedX <= 0) {
+    ballSpeedX *= -1
+  }
+  if (ballPositionY + ballSpeedY <= 0) {
+    ballSpeedY *= -1
+  }
+  if (ballPositionY + ballSpeedY >= paddlePositionY) {
+    // is ball touching paddle?
+    if (ballPositionX + ballSpeedX > paddlePositionX && ballPositionX + ballSpeedX < paddlePositionX + paddleWitdh) {
+      ballSpeedY *= -1
+    }
+  }
+  if (ballPositionY + ballSpeedY > SCREEN_HEIGHT) {
+    // lives -= 1;
+    // reset();
+    ballSpeedY *= -1
+  }
+  if (paddlePositionX + paddleWitdh + paddleSpeed >= SCREEN_WIDTH || paddlePositionX + paddleSpeed <= 0) {
+    paddleSpeed = 0;
+  }
+}
+
+function updatePosition() {
+  // move the paddle
+  paddlePositionX += paddleSpeed;
+  // move the ball
+  ballPositionX += ballSpeedX;
+  ballPositionY += ballSpeedY;
+}
+
+function drawScreen() {
+  var canvas = document.querySelector("canvas");
+  var ctx = canvas.getContext("2d");
+  // clear the screen
+  drawRect(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT, "black", ctx);
+  // draw some blocks
+  for (var i = 0; i < blockRows; i++) {
+    for (var j = 0; j < blocksInRow; j++) {
+      var blockPositionX = j * (blockWidth + blockPadding) + blockPadding;
+      var blockPositionY = i * (blockHeight + blockPadding) + blockPadding;
+      drawRect(blockPositionX, blockPositionY, blockWidth, blockHeight, "white", ctx);
+    }
+  }
+  // draw the paddle
+  drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, "white", ctx);
+  // draw the ball
+  drawCircle(ballPositionX, ballPositionY, ballRadius, "white", ctx);
+}
 
 function reset() {
   ballPositionX = (SCREEN_WIDTH / 2) - (ballRadius / 2);
