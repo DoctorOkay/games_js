@@ -1,3 +1,5 @@
+// TODO: Encapsulate values more
+
 // game screen constants
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
@@ -7,6 +9,60 @@ const FPS = 30;
 var lives = 3;
 
 // ball values
+var Ball = function() {
+  this.radius = 10;
+
+  this.position = {
+    x: 100,
+    y: 100
+  };
+
+  this.velocity = {
+    x: 5,
+    y: 5
+  };
+
+  this.move = function() {
+    this.position.x += this.velocity.x;
+    this.position.y += this.velocity.y;
+  }
+
+  this.checkCollision = function(obj) {
+    // bounding box = x1, x2, y1, y2
+    var x1 = this.position.x + this.velocity.x;
+    var x2 = this.position.x + this.velocity.x;
+    var y1 = this.position.y + this.velocity.y;
+    var y2 = this.position.y + this.velocity.y;
+
+    var ox1 = obj.position.x;
+    var ox2 = obj.position.x + obj.width;
+    var oy1 = obj.position.y;
+    var oy2 = obj.position.y + obj.height;
+
+    collidingX = x2 >= ox1 && x1 <= ox2;
+    collidingY = y2 >= oy1 && y1 <= oy2;
+
+    if (collidingX && collidingY) {
+      // TODO: deflect ball x speed based on where the collision is taking place
+      // this.velocity.x *= -1;
+      this.velocity.y *= -1;
+    }
+  }
+
+  this.screenCollision = function(screenWidth, screenHeight) {
+    collidingX = (this.position.x + this.velocity.x) >=screenWidth || (this.position.x + this.velocity.x <= 0);
+    collidingY = (this.position.y + this.velocity.y) >= screenHeight|| (this.position.y + this.velocity.y <= 0);
+    if (collidingX) {
+      this.velocity.x *= -1;
+    }
+    if (collidingY) {
+      this.velocity.y *= -1;
+    }
+  }
+}
+
+var gameBall = new Ball();
+
 var ballRadius = 10;
 var ballPositionX = (SCREEN_WIDTH / 2) - (ballRadius / 2);
 var ballPositionY = (SCREEN_HEIGHT / 2) - (ballRadius / 2);
@@ -21,10 +77,14 @@ var paddlePositionY = SCREEN_HEIGHT - (paddleHeight * 1.5);
 var paddleSpeed = 0;
 
 // block values
-var blockPadding = 5;
-var blocksInRow = 5;
-var blockRows = 10;
-var blockWidth = (SCREEN_WIDTH / blocksInRow) - blockPadding;
+var blockPadding = 1;
+var blocksInRow = 6;
+var blockRows = 4;
+// (padding + block + padding) * blocksInRow = SCREEN_WIDTH
+// padding + block + padding = SCREEN_WIDTH / blocksInRow
+// block + (padding * 2) = (SCREEN_WIDTH / blocksInRow)
+// block = (SCREEN_WIDTH / blocksInRow) - (padding * 2)
+var blockWidth = SCREEN_WIDTH / blocksInRow;
 var blockHeight = blockWidth / 8;
 var blocks = [];
 
@@ -72,6 +132,18 @@ window.addEventListener("load", function(e) {
 });
 
 function detectCollision() {
+
+  var paddlePosition = {
+    position: {
+      x: paddlePositionX + paddleSpeed,
+      y: paddlePositionY
+    },
+    width: paddleWitdh,
+    height: paddleHeight
+  };
+  gameBall.screenCollision(SCREEN_WIDTH, SCREEN_HEIGHT);
+  gameBall.checkCollision(paddlePosition);
+
   if (ballPositionX + ballSpeedX >= SCREEN_WIDTH || ballPositionX + ballSpeedX <= 0) {
     ballSpeedX *= -1
   }
@@ -98,8 +170,9 @@ function updatePosition() {
   // move the paddle
   paddlePositionX += paddleSpeed;
   // move the ball
-  ballPositionX += ballSpeedX;
-  ballPositionY += ballSpeedY;
+  gameBall.move();
+  // ballPositionX += ballSpeedX;
+  // ballPositionY += ballSpeedY;
 }
 
 function drawScreen() {
@@ -118,7 +191,7 @@ function drawScreen() {
   // draw the paddle
   drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, "white", ctx);
   // draw the ball
-  drawCircle(ballPositionX, ballPositionY, ballRadius, "white", ctx);
+  drawCircle(gameBall.position.x, gameBall.position.y, gameBall.radius, "white", ctx);
 }
 
 function reset() {
