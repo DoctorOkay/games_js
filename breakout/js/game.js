@@ -1,5 +1,5 @@
 // TODO: Encapsulate values more
-
+// TODO: Fix block width
 // game screen constants
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
@@ -22,6 +22,8 @@ var Ball = function() {
     y: 5
   };
 
+  this.color = randomColor();
+
   this.move = function() {
     this.position.x += this.velocity.x;
     this.position.y += this.velocity.y;
@@ -43,7 +45,7 @@ var Ball = function() {
     collidingY = y2 >= oy1 && y1 <= oy2;
 
     if (collidingX && collidingY) {
-      // TODO: deflect ball x speed based on where the collision is taking place
+      // TODO: reflect ball x speed based on where the collision is taking place
       // this.velocity.x *= -1;
       this.velocity.y *= -1;
     }
@@ -75,17 +77,19 @@ var paddleHeight = paddleWitdh / 8;
 var paddlePositionX = (SCREEN_WIDTH / 2) - (paddleWitdh / 2);
 var paddlePositionY = SCREEN_HEIGHT - (paddleHeight * 1.5);
 var paddleSpeed = 0;
+var paddleColor = randomColor();
 
 // block values
-var blockPadding = 1;
+var blockPadding = 4;
 var blocksInRow = 6;
-var blockRows = 4;
+var blockRows = 5;
 // (padding + block + padding) * blocksInRow = SCREEN_WIDTH
 // padding + block + padding = SCREEN_WIDTH / blocksInRow
 // block + (padding * 2) = (SCREEN_WIDTH / blocksInRow)
 // block = (SCREEN_WIDTH / blocksInRow) - (padding * 2)
-var blockWidth = SCREEN_WIDTH / blocksInRow;
+var blockWidth = ((SCREEN_WIDTH - (blocksInRow * 2) * blockPadding)/ blocksInRow);
 var blockHeight = blockWidth / 8;
+var blockColor = randomColor();
 var blocks = [];
 
 console.log(blocks);
@@ -183,15 +187,16 @@ function drawScreen() {
   // draw some blocks
   for (var i = 0; i < blockRows; i++) {
     for (var j = 0; j < blocksInRow; j++) {
-      var blockPositionX = j * (blockWidth + blockPadding) + blockPadding;
-      var blockPositionY = i * (blockHeight + blockPadding) + blockPadding;
-      drawRect(blockPositionX, blockPositionY, blockWidth, blockHeight, "white", ctx);
+      var blockPositionX = j * (blockWidth + (blockPadding * 2)) + blockPadding;
+      var blockPositionY = i * (blockHeight + (blockPadding * 1.5)) + blockPadding;
+
+      drawRect(blockPositionX, blockPositionY, blockWidth, blockHeight, blockColor, ctx);
     }
   }
   // draw the paddle
-  drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, "white", ctx);
+  drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, paddleColor, ctx);
   // draw the ball
-  drawCircle(gameBall.position.x, gameBall.position.y, gameBall.radius, "white", ctx);
+  drawCircle(gameBall.position.x, gameBall.position.y, gameBall.radius, gameBall.color, ctx);
 }
 
 function reset() {
@@ -214,4 +219,11 @@ function drawCircle(x, y, r, color, ctx) {
   ctx.beginPath();
   ctx.arc(x, y, r, 0, Math.PI * 2, true);
   ctx.fill();
+}
+
+function randomColor() {
+  var r = 255 * Math.random() | 0;
+  var g = 255 * Math.random() | 0;
+  var b = 255 * Math.random() | 0;
+  return 'rgb(' + r + ',' + g + ',' + b + ')';
 }
