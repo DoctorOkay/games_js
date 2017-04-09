@@ -12,7 +12,6 @@ const FPS = 30;
 // player variables
 var lives = 3;
 
-// ball values
 var Ball = function() {
   this.radius = 10;
 
@@ -55,9 +54,9 @@ var Ball = function() {
     }
   }
 
-  this.screenCollision = function(screenWidth, screenHeight) {
-    collidingX = (this.position.x + this.velocity.x) >=screenWidth || (this.position.x + this.velocity.x <= 0);
-    collidingY = (this.position.y + this.velocity.y) >= screenHeight|| (this.position.y + this.velocity.y <= 0);
+  this.screenCollision = function(w, h) {
+    collidingX = (this.position.x + this.velocity.x) >=w || (this.position.x + this.velocity.x <= 0);
+    collidingY = (this.position.y + this.velocity.y) >= h|| (this.position.y + this.velocity.y <= 0);
     if (collidingX) {
       this.velocity.x *= -1;
     }
@@ -67,36 +66,70 @@ var Ball = function() {
   }
 }
 
+var Paddle = function() {
+  this.width = SCREEN_WIDTH / 4;
+  this.height = this.width / 8;
+  
+  this.position = {
+    x: (SCREEN_WIDTH / 2) - (this.width / 2),
+    y: SCREEN_HEIGHT - this.height * 1.5
+  };
+  
+  this.velocity = 0;
+  
+  this.direction = 0;
+  
+  this.color = randomColor();
+  
+  this.move = function() {
+    switch(this.direction) {
+      case -1: // moving left
+        this.velocity -= 1;
+        if (this.velocity <= -10) {
+          this.velocity = -10;
+        }
+        break;
+      case 0: // stopped
+        if (this.velocity > 0) {
+          this.velocity -= 1;
+        }
+        if (this.velocity < 0) {
+          this.velocity += 1;
+        }
+        if (this.velocity = 0) {
+          this.velocity = 0;
+        }
+        break;
+      case 1: // moving right
+        this.velocity += 1;
+        if (this.velocity >= 10) {
+          this.velocity = 10;
+        }
+        break;
+    }
+    
+    this.position.x += this.velocity;
+  }
+  
+  this.screenCollision = function(w) {
+    if (this.position.x + this.width + this.velocity >= w ||
+        this.position.x + this.velocity <= 0) {
+          this.direction = 0;
+        }
+  }    
+}
+
 var gameBall = new Ball();
-
-var ballRadius = 10;
-var ballPositionX = (SCREEN_WIDTH / 2) - (ballRadius / 2);
-var ballPositionY = (SCREEN_HEIGHT / 2) - (ballRadius / 2);
-var ballSpeedX = 5;
-var ballSpeedY = 5;
-
-// paddle values
-var paddleWitdh = SCREEN_WIDTH / 4;
-var paddleHeight = paddleWitdh / 8;
-var paddlePositionX = (SCREEN_WIDTH / 2) - (paddleWitdh / 2);
-var paddlePositionY = SCREEN_HEIGHT - (paddleHeight * 1.5);
-var paddleSpeed = 0;
-var paddleColor = randomColor();
+var gamePaddle = new Paddle();
 
 // block values
 var blockPadding = 4;
 var blocksInRow = 6;
 var blockRows = 5;
-// (padding + block + padding) * blocksInRow = SCREEN_WIDTH
-// padding + block + padding = SCREEN_WIDTH / blocksInRow
-// block + (padding * 2) = (SCREEN_WIDTH / blocksInRow)
-// block = (SCREEN_WIDTH / blocksInRow) - (padding * 2)
 var blockWidth = ((SCREEN_WIDTH - (blocksInRow * 2) * blockPadding)/ blocksInRow);
 var blockHeight = blockWidth / 8;
 var blockColor = randomColor();
 var blocks = [];
-
-console.log(blocks);
 
 window.addEventListener("load", function(e) {
   var canvas = document.createElement("canvas");
@@ -118,17 +151,17 @@ window.addEventListener("load", function(e) {
     switch(e.code) {
       case "KeyA":
       case "ArrowLeft":
-        paddleSpeed = -10;
+        gamePaddle.direction = -1;        
         break;
       case "KeyD":
       case "ArrowRight":
-        paddleSpeed = 10;
+        gamePaddle.direction = 1;        
         break;
     }
   });
 
   window.addEventListener("keyup", function(e) {
-    paddleSpeed = 0;
+    gamePaddle.direction = 0;
   });
 
   window.setInterval(function() {
@@ -140,47 +173,15 @@ window.addEventListener("load", function(e) {
 });
 
 function detectCollision() {
-
-  var paddlePosition = {
-    position: {
-      x: paddlePositionX + paddleSpeed,
-      y: paddlePositionY
-    },
-    width: paddleWitdh,
-    height: paddleHeight
-  };
   gameBall.screenCollision(SCREEN_WIDTH, SCREEN_HEIGHT);
-  gameBall.checkCollision(paddlePosition);
-
-  if (ballPositionX + ballSpeedX >= SCREEN_WIDTH || ballPositionX + ballSpeedX <= 0) {
-    ballSpeedX *= -1
-  }
-  if (ballPositionY + ballSpeedY <= 0) {
-    ballSpeedY *= -1
-  }
-  if (ballPositionY + ballSpeedY >= paddlePositionY) {
-    // is ball touching paddle?
-    if (ballPositionX + ballSpeedX > paddlePositionX && ballPositionX + ballSpeedX < paddlePositionX + paddleWitdh) {
-      ballSpeedY *= -1
-    }
-  }
-  if (ballPositionY + ballSpeedY > SCREEN_HEIGHT) {
-    // lives -= 1;
-    // reset();
-    ballSpeedY *= -1
-  }
-  if (paddlePositionX + paddleWitdh + paddleSpeed >= SCREEN_WIDTH || paddlePositionX + paddleSpeed <= 0) {
-    paddleSpeed = 0;
-  }
+  gameBall.checkCollision(gamePaddle);
+  
+  gamePaddle.screenCollision(SCREEN_WIDTH);
 }
 
 function updatePosition() {
-  // move the paddle
-  paddlePositionX += paddleSpeed;
-  // move the ball
+  gamePaddle.move()
   gameBall.move();
-  // ballPositionX += ballSpeedX;
-  // ballPositionY += ballSpeedY;
 }
 
 function drawScreen() {
@@ -198,19 +199,14 @@ function drawScreen() {
     }
   }
   // draw the paddle
-  drawRect(paddlePositionX, paddlePositionY, paddleWitdh, paddleHeight, paddleColor, ctx);
+  drawRect(gamePaddle.position.x, gamePaddle.position.y, gamePaddle.width, gamePaddle.height, gamePaddle.color, ctx);
   // draw the ball
   drawCircle(gameBall.position.x, gameBall.position.y, gameBall.radius, gameBall.color, ctx);
 }
 
 function reset() {
-  ballPositionX = (SCREEN_WIDTH / 2) - (ballRadius / 2);
-  ballPositionY = (SCREEN_HEIGHT / 2) - (ballRadius / 2);
-  ballSpeedX = 5;
-  ballSpeedY = 5;
-  paddlePositionX = (SCREEN_WIDTH / 2) - (paddleWitdh / 2);
+  
 }
-
 
 // drawing utilities
 function drawRect(x, y, w, h, color, ctx) {
