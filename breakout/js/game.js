@@ -1,5 +1,9 @@
 // TODO: Encapsulate values more
-// TODO: Fix block width
+// TODO: Refactor for game objects
+// TODO: collision with blocks
+// TODO: scoring system
+// TODO: game over conditions
+
 // game screen constants
 const SCREEN_WIDTH = 800;
 const SCREEN_HEIGHT = 600;
